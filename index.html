@@ -183,12 +183,17 @@
         worker.onerror = function(error) {
             console.error('Ошибка воркера:', error);
         };
+        // Время загрузки сайта
+         window.addEventListener('load', () => {
+            const loadTime = performance.now();
+            console.log(`Время загрузки сайта: ${loadTime.toFixed(2)} миллисекунд`);
 
         // Уничтожение воркера, когда он больше не нужен
         window.addEventListener('beforeunload', () => {
             worker.terminate();
         });
     });
+
 </script>
 
 
