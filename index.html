@@ -140,19 +140,25 @@
         }
         setInterval(loop, 585);
     </script>
-    <script>
+<script>
     document.addEventListener('DOMContentLoaded', () => {
-        // Код веб-воркера
         const workerCode = `
             self.onmessage = function(event) {
-                const result = computeHeavyTask(event.data);
-                self.postMessage(result);
+                const { task } = event.data;
+                if (task === 'computeSum') {
+                    const result = computeHeavyTask(10000000); // фиксированное значение
+                    self.postMessage({ result });
+                }
             };
 
             function computeHeavyTask(data) {
                 let sum = 0;
                 for (let i = 0; i < data; i++) {
                     sum += i;
+                    // Отправка прогресса каждые 1 млн итераций
+                    if (i % 1000000 === 0) {
+                        self.postMessage({ progress: (i / data) * 100 });
+                    }
                 }
                 return sum;
             }
@@ -162,12 +168,26 @@
         const worker = new Worker(URL.createObjectURL(blob));
 
         worker.onmessage = function(event) {
-            console.log('Результат от воркера: ' + event.data);
-            // Здесь можно обновить UI или выполнить другие действия
+            if (event.data.progress !== undefined) {
+                console.log('Прогресс:', event.data.progress + '%');
+            } else {
+                console.log('Результат от воркера: ' + event.data.result);
+                // Здесь можно обновить UI или выполнить другие действия
+            }
         };
 
         // Запустим воркера сразу, когда страница загружается
-        worker.postMessage(10000000); // Отправка данных воркеру
+        worker.postMessage({ task: 'computeSum' }); // Отправка данных воркеру
+
+        // Обработка ошибок
+        worker.onerror = function(error) {
+            console.error('Ошибка воркера:', error);
+        };
+
+        // Уничтожение воркера, когда он больше не нужен
+        window.addEventListener('beforeunload', () => {
+            worker.terminate();
+        });
     });
 </script>
 
