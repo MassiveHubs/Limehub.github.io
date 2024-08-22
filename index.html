@@ -140,6 +140,37 @@
         }
         setInterval(loop, 585);
     </script>
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Код веб-воркера
+        const workerCode = `
+            self.onmessage = function(event) {
+                const result = computeHeavyTask(event.data);
+                self.postMessage(result);
+            };
+
+            function computeHeavyTask(data) {
+                let sum = 0;
+                for (let i = 0; i < data; i++) {
+                    sum += i;
+                }
+                return sum;
+            }
+        `;
+
+        const blob = new Blob([workerCode], { type: 'application/javascript' });
+        const worker = new Worker(URL.createObjectURL(blob));
+
+        worker.onmessage = function(event) {
+            console.log('Результат от воркера: ' + event.data);
+            // Здесь можно обновить UI или выполнить другие действия
+        };
+
+        // Запустим воркера сразу, когда страница загружается
+        worker.postMessage(10000000); // Отправка данных воркеру
+    });
+</script>
+
 
 
 </body>
